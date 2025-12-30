@@ -1,0 +1,206 @@
+---
+layout: ../layouts/Layout.astro
+title: 'GR-Dexter Technical Report'
+description: Simple project page template for your research paper, built with Astro and Tailwind CSS
+favicon: logo.png
+thumbnail: screenshot-light.png
+---
+
+import Header from "../components/Header.astro"; 
+import VideoHeader from "../components/VideoHeader.astro";
+import Video from "../components/Video.astro";
+import HighlightedSection from "../components/HighlightedSection.astro";
+import HighlightedSectionResult from "../components/HighlightedSection_result.astro";
+import HighlightedSectionMethod from "../components/HighlightedSection_method.astro";
+import SmallCaps from "../components/SmallCaps.astro";
+import Figure from "../components/Figure.astro";
+import Image from "../components/Image.astro";
+import TwoColumns from "../components/TwoColumns.astro";
+import TwoColumnsVideo from "../components/TwoColumnsVideo.astro";
+import YouTubeVideo from "../components/YouTubeVideo.astro";
+import LaTeX from "../components/LaTeX.astro";
+
+import { ImageComparison } from "../components/ImageComparison.tsx";
+
+import hand from "../assets/hand.png";
+import teleoperation_system from "../assets/teleop_setup.png"
+import teleop_demo from "../assets/teleop_demo.png"
+import data_pyramid from "../assets/data_pyramid.png"
+import makeup_result from "../assets/makeup_result.png"
+import ppa_results from "../assets/ppa_results.png"
+import cross_embodied from "../assets/cross_embodied.png"
+import unseen_ins from "../assets/unseen_ins.png"
+import long_horizon from "../assets/long_horizon.png"
+
+import background from "../assets/background_1080p.mp4";
+import tech_report from "../assets/tech_report_1080p.mp4";
+
+import CodeBlock from "../components/CodeBlock.astro";
+import Table from "../components/Table.astro";
+
+<VideoHeader
+  title={frontmatter.title}
+  conference="ByteDance Seed"
+  links={[
+    {
+      name: "Paper",
+      url: "/GR-Dexter Tech Report.pdf",
+      icon: "ri:file-pdf-2-line",
+    },
+    {
+      name: "arXiv",
+      url: "https://arxiv.org/abs/2507.03227",
+      icon: "academicons:arxiv",
+    },
+  ]}
+  source={background}
+/>
+
+<HighlightedSectionResult>
+
+## Abstract
+
+<div class="text-justify">
+Vision–language–action (VLA) models have enabled language-conditioned, long-horizon robot manipulation, but most existing systems are limited to grippers. Scaling VLA policies to bimanual platforms with high-DoF dexterous hands remains challenging due to the expanded action space, frequent hand–object occlusions, and the cost of collecting demonstrations. We present GR-Dexter, an integrated hardware–model–data framework for VLA-based generalist manipulation on a bimanual dexterous-hand robot. Our approach combines a compact high-DoF robotic hand, an intuitive bimanual teleoperation pipeline for collecting demonstrations, and a training recipe that leverages teleoperated robot trajectories together with large-scale vision–language and carefully curated cross-embodiment data. Across real-world evaluations spanning long-horizon everyday manipulation and generalizable pick-and-place, GR-Dexter achieves strong in-domain performance and improved robustness to unseen objects and unseen instructions under out-of-distribution settings. We hope GR-Dexter serves as a practical step toward generalist dexterous-hand robotic manipulation.
+</div>
+<div>
+    <Video source={tech_report} />
+    <h3 style="font-family: 'EB Garamond', sans-serif; font-weight: 600; color: #333; margin-top: 12px; text-align: center; font-size: 18px; letter-spacing: 1px;">
+    </h3>
+</div>
+
+</HighlightedSectionResult>
+
+<HighlightedSection>
+## Hardware and Control
+
+### ByteDexter Robotic Hand
+
+<div class="text-justify">
+The ByteDexter hand series employ a linkage-driven transmission mechanism for its advantages in force transparency, durability, and ease of maintenance. As an upgraded successor to the V1 hand, the ByteDexter V2 hand introduces an additional thumb DoF, bringing the total to 21 DoFs, while simultaneously reducing the overall hand size (height: 219mm, width: 108mm). Each finger provides four DoFs, and the thumb incorporates five to enable a wider range of oppositional and dexterous motions. The five fingertips of ByteDexter V2 are covered with high-density piezoresistive sensor arrays that measure normal contact forces. Each finger tip is fully covered by an 11\*9 taxel array, and the thumb uses a 9\*11 array to match its geometry.
+</div>
+
+<Figure>
+  <Image slot="figure" source={hand} altText="hand" class="w-full" />
+  <span slot="caption">The ByteDexter V2 hand. We show the DoF distribution, tactile fingertips, and the thumb’s opposition capability in the Kapandji test.</span>
+</Figure>
+</HighlightedSection>
+<HighlightedSectionResult>
+
+### Bimanual System and Control
+<div class="text-justify">
+Real-world robot data are collected via a bimanual teleoperation interface comprising a Meta Quest VR setup for wrist pose tracking, two Manus Metagloves for hand movement capture, and foot pedals for arm control. Two Meta Quest controllers are mounted on the dorsal side of the gloves to ensure reliable wrist-hand coordinated motion tracking. This setup allows teleoperators to simultaneously coordinate two Franka arms for long-horizon manipulation tasks. Human motions are retargeted in realtime to joint position commands, providing kinematically consistent mapping via whole-body control. The system incorporates robust adaptive mechanisms to handle visual tracking loss and prevent hazardous operation. Hand motion retargeting is formulated as a constrained optimization problem aggregating wrist-tip vectors, thumb-tip vectors, collision avoidance, and a regularization term, solved using Sequential Quadratic Programming.  
+</div>
+
+<Figure>
+  <Image slot="figure" source={teleoperation_system} altText="teleoperation_system" class="w-full" />
+  <span slot="caption">Bimanual robotic system comprising two Franka Research 3 arms equipped with ByteDexter V2 hands.</span>
+</Figure>
+
+</HighlightedSectionResult>
+
+<HighlightedSection>
+## The GR-Dexter Model
+
+<div class="text-justify">
+  GR-Dexter follows GR-3 and adopts a Mixture-of-Transformer architecture for a vision-language-action (VLA) model <LaTeX formula="\pi_{\theta}" inline /> of 4B parameters. <LaTeX formula="\pi_\theta(\mathbf a_t\mid l, \mathbf{o}_{t}, \mathbf{s}_{t})" inline /> controls a bi-manual robot with fixed base by generating a <LaTeX formula="k" inline />-length action chunk <LaTeX formula="\mathbf a_t  = a_{t:t+k}" inline /> conditioned on the input language instruction <LaTeX formula="l" inline />, observation <LaTeX formula="\mathbf{o}_{t}" inline />, and robot state <LaTeX formula="\mathbf{s}_{t}" inline />. Specifically, different from GR-3 which learns binary discrete gripper actions, each action <LaTeX formula="a_t" inline /> is a vector consisting of: 1) arm joint actions, 2) arm end-effector poses, 3) hand joint actions, and 4) fingertip positions. 
+
+</div>
+
+### Training Recipe
+<div class="text-justify">
+We employ a co-training strategy for GR-Dexter using a mixture of three distinct data sources: web-scale vision-language data, cross-embodiment real-robot data, and human trajectory data. To handle the structural differences across datasets, we mask out unavailable or unreliable action dimensions (e.g., specific joints not present in the target embodiment). 
+</div>
+
+<TwoColumns>
+  <div class="text-justify" slot="left">
+  • Vision-language data: We reuse the VLM dataset from GR-3, which covers a wide spectrum of tasks including image captioning, visual question answering, image grounding, and grounded image captioning. 
+  
+  • Cross-embodiment data: We leverage existing open-source bi-manual humanoid datasets. Specifically, we select three dual-arm dexterous manipulation datasets that encompass diverse embodiments and task settings: Fourier ActionNet Dataset, OpenLoong Baihu Dataset, and RoboMIND. 
+  
+  •  Human trajectories: While cross-embodiment data offers accurate robot information, the scale and diversity of tasks are inevitably limited by costs. Crowdsourcing human demonstrations via easily accessible VR devices offers a promising solution to scale up data quantity and diversity. We adopt open-source dataset and supplement it with data collected using Pico VR devices. 
+  </div>
+  <Figure slot="right">
+    <Image slot="figure" source={data_pyramid} altText="data_pyramid" width="500" />
+    <span slot="caption">Data Pyramid of GR-Dexter.</span>
+  </Figure>
+</TwoColumns>
+
+### Cross-Embodiment Motion Retargeting and Transferring
+<div class="text-justify">
+• Transferring cross-embodiment trajectories: We first standardize camera observations across datasets. We then perform careful retargeting to ByteDexter V2 hand by aligning the fingertips. This fingertip-centric alignment preserves task-relevant contact geometry while remaining agnostic to joint-level discrepancies. The resulting trajectories are then resampled by task category to produce a balanced cross-embodiment training corpus.
+</div>
+
+<div class="text-justify">
+• Transferring human trajectories: The gap between human and robotic hands is substantial: VR data collection introduces ego-motion due to head-mounted cameras, and single-frame hand pose estimation commonly leads to temporal jitter and inconsistency. We first perform careful filtering based on hand visibility and velocity. Next, human trajectories are mapped into the same visual and kinematic representation as robot data similar to the cross-embodiment data cleaning process.
+</div>
+
+</HighlightedSection>
+<HighlightedSectionResult>
+## Experiments
+
+<div class="text-justify">
+We conduct extensive real-world experiments to comprehensively evaluate the performance of GR-Dexter on long-horizon bimanual manipulation and generalizable pick-and-place tasks. Our experiments evaluate GR-Dexter's capabilities in: (i) long-horizon task execution, (ii) generalization to out-of-distribution scenarios featuring novel relative spatial configurations, unseen objects, and unseen instructions, and (iii) learning from cross-embodiment data.
+</div>
+
+### Long-Horizon Manipulation Tasks
+
+<div class="text-justify">
+We study long-horizon instruction following across three tasks of increasing difficulty. We first verify that a plain behavior-cloned VLA, trained solely on human teleoperated robot trajectories, can reliably execute long-horizon tasks. In the vacuum operation task, the robot first establishes a stable four‑finger grasp on a tabletop vacuum, powers it with a thumb press, increases power with a second thumb press, performs coverage sweeping to remove confetti, and then powers it off. Serving bread requires using tongs to retrieve a croissant from a pastry container while  maintaining grasping stability, simultaneous object stabilization, and precise, compliant manipulation. 
+</div>
+
+<Figure>
+  <Image slot="figure" source={long_horizon} altText="long_horizon" class="w-full" />
+  <span slot="caption">GR-Dexter performs long-horizon tasks.</span>
+</Figure>
+
+<div class="text-justify">
+**Results**: We summarizes success rates for plain-VLA and GR-Dexter under both Basic and OOD-Layout. In the Basic setting, plain-VLA achieves a success rate of 0.96, while GR-Dexter achieves 0.97, showing that co-training preserves the strong in-domain capability of the teleop-only baseline. In the more challenging OOD-Layout setting, plain-VLA drops to 0.64, whereas GR-Dexter improves substantially to 0.89. These results indicate that co-training with vision-language data significantly enhances generalization to unseen spatial layouts, while maintaining in-domain performance.
+</div>
+
+<Figure>
+  <Image slot="figure" source={makeup_result} altText="makeup_result" class="w-full" />
+  <span slot="caption">Experiment Settings and Results of Makeup Decluttering.</span>
+</Figure>
+
+
+</HighlightedSectionResult>
+<HighlightedSection>
+
+### Generalizable Pick-and-Place
+<div class="text-justify">
+**Results**: On the in-domain Basic setting, all models achieve high success rates: plain VLA reaches 0.87, GR-Dexter (without cross-embodiment data) reaches 0.85, and GR-Dexter achieves the best performance at 0.93. Performance diverges substantially under OOD settings. On Unseen Objects, plain VLA drops to 0.45, while cotraining on vision-language data improves the success rate to 0.75 and GR-Dexter further increases success to 0.85, indicating stronger robustness to novel object instances. Similarly, under language variation in Unseen Instructions, plain VLA attains 0.53 whereas GR-Dexter achieves 0.83, demonstrating markedly improved reliability to unseen, abstract instructions. 
+</div>
+
+<Figure>
+  <Image slot="figure" source={ppa_results} altText="ppa_results" class="w-full" />
+  <span slot="caption">Experiment settings and Results of Generalizable Pick-and-Place.</span>
+</Figure>
+
+<div class="text-justify">
+These gains are consistent with the qualitative examples in following figures, where GR-Dexter successfully grasps unseen objects by leveraging skills learned from cross-embodiment data, and correctly interprets and executes previously unseen instructions. Overall, while all models perform well in-domain, GR-Dexter consistently yields the highest success rates and shows the strongest generalization under both unseen objects and unseen instructions.
+</div>
+
+<Figure>
+  <Image slot="figure" source={cross_embodied} altText="cross_embodied" class="w-full" />
+  <span slot="caption">GR-Dexter is capable of grasping unseen objects.</span>
+</Figure>
+
+<Figure>
+  <Image slot="figure" source={unseen_ins} altText="unseen_ins" class="w-full" />
+  <span slot="caption">GR-Dexter follows unseen instructions.</span>
+</Figure>
+
+</HighlightedSection>
+
+## Citation
+<div class="text-sm mt-6 md:max-w-3xl ml-8 mr-0 w-full" style="font-family: 'EB Garamond', sans-serif; color: #333; line-height: 1.; padding: 10px; background-color: #fffff; margin-bottom: 20px;">
+```bibtex
+@article{gr-dexter,
+  title={GR-Dexter Technical Report},
+  author={Bytedance Seed},
+  journal={arXiv preprint arXiv:2512.01801},
+  year={2025}
+}
+```
+</div>
