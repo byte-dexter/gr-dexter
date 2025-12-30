@@ -7,13 +7,14 @@ interface Props {
   width?: number;
   height?: number;
   quality?: number;
+  class?: string;
 }
 
-const { source, altText, width, height, quality = 90 } = Astro.props;
+const { source, altText, width, height, quality = 90, class: className } = Astro.props;
 ---
 
 <AstroImage
-  class="rounded-lg max-h-[35rem] w-max object-contain !px-0"
+  class={`rounded-lg max-h-[35rem] object-contain !px-0 ${className || ''}`}
   src={source}
   alt={altText}
   width={width}

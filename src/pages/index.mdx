@@ -77,12 +77,13 @@ Vision–language–action (VLA) models have enabled language-conditioned, long-
 ### ByteDexter Robotic Hand
 
 <div class="text-justify">
-The ByteDexter hand series employ a linkage-driven transmission mechanism for its advantages in force transparency, durability, and ease of maintenance. As an upgraded successor to the V1 hand, the ByteDexter V2 hand introduces an additional thumb DoF, bringing the total to 21 DoFs, while simultaneously reducing the overall hand size (height: 219mm, width: 108mm). Each finger provides four DoFs, and the thumb incorporates five to enable a wider range of oppositional and dexterous motions. The five fingertips of ByteDexter V2 are covered with high-density piezoresistive sensor arrays that measure normal contact forces. Each finger tip is fully covered by an 11\*9 taxel array, and the thumb uses a 9\*11 array to match its geometry.
+The ByteDexter hand series employ a linkage-driven transmission mechanism for its advantages in force transparency, durability, and ease of maintenance. As an upgraded successor to the V1 hand, the ByteDexter V2 hand introduces an additional thumb DoF, bringing the total to 21 DoFs, while simultaneously reducing the overall hand size (height: 219mm, width: 108mm). Each finger provides four DoFs, and the thumb incorporates five to enable a wider range of oppositional and dexterous motions. The five fingertips of ByteDexter V2 are covered with high-density piezoresistive sensor arrays
+that measures normal forces with fine spatial granularity across the finger tip, finger pad, and fingertip’s lateral surface.
 </div>
 
 <Figure>
-  <Image slot="figure" source={hand} altText="hand" class="w-full" />
-  <span slot="caption">The ByteDexter V2 hand. We show the DoF distribution, tactile fingertips, and the thumb’s opposition capability in the Kapandji test.</span>
+  <Image slot="figure" source={hand} altText="hand" class="w-[95%]" />
+  <span slot="caption">The ByteDexter V2 hand with tactile fingertips.</span>
 </Figure>
 </HighlightedSection>
 <HighlightedSectionResult>
@@ -93,8 +94,8 @@ Real-world robot data are collected via a bimanual teleoperation interface compr
 </div>
 
 <Figure>
-  <Image slot="figure" source={teleoperation_system} altText="teleoperation_system" class="w-full" />
-  <span slot="caption">Bimanual robotic system comprising two Franka Research 3 arms equipped with ByteDexter V2 hands.</span>
+  <Image slot="figure" source={teleoperation_system} altText="teleoperation_system" class="w-[90%]" />
+  <span slot="caption">Bimanual robotics system for data collection and model rollout.</span>
 </Figure>
 
 </HighlightedSectionResult>
@@ -103,7 +104,7 @@ Real-world robot data are collected via a bimanual teleoperation interface compr
 ## The GR-Dexter Model
 
 <div class="text-justify">
-  GR-Dexter follows GR-3 and adopts a Mixture-of-Transformer architecture for a vision-language-action (VLA) model <LaTeX formula="\pi_{\theta}" inline /> of 4B parameters. <LaTeX formula="\pi_\theta(\mathbf a_t\mid l, \mathbf{o}_{t}, \mathbf{s}_{t})" inline /> controls a bi-manual robot with fixed base by generating a <LaTeX formula="k" inline />-length action chunk <LaTeX formula="\mathbf a_t  = a_{t:t+k}" inline /> conditioned on the input language instruction <LaTeX formula="l" inline />, observation <LaTeX formula="\mathbf{o}_{t}" inline />, and robot state <LaTeX formula="\mathbf{s}_{t}" inline />. Specifically, different from GR-3 which learns binary discrete gripper actions, each action <LaTeX formula="a_t" inline /> is a vector consisting of: 1) arm joint actions, 2) arm end-effector poses, 3) hand joint actions, and 4) fingertip positions. 
+  GR-Dexter follows GR-3 and adopts a Mixture-of-Transformer architecture for a vision-language-action (VLA) model <LaTeX formula="\pi_{\theta}" inline /> of 4B parameters. <LaTeX formula="\pi_\theta(\mathbf a_t\mid l, \mathbf{o}_{t}, \mathbf{s}_{t})" inline /> controls a bi-manual robot with fixed base by generating a <LaTeX formula="k" inline />-length action chunk <LaTeX formula="\mathbf a_t  = a_{t:t+k}" inline /> conditioned on the input language instruction <LaTeX formula="l" inline />, observation <LaTeX formula="\mathbf{o}_{t}" inline />, and robot state <LaTeX formula="\mathbf{s}_{t}" inline />. Specifically, each action <LaTeX formula="a_t" inline /> is a vector consisting of: 1) arm joint actions, 2) arm end-effector poses, 3) hand joint actions, and 4) fingertip positions. 
 
 </div>
 
@@ -146,7 +147,7 @@ We conduct extensive real-world experiments to comprehensively evaluate the perf
 ### Long-Horizon Manipulation Tasks
 
 <div class="text-justify">
-We study long-horizon instruction following across three tasks of increasing difficulty. We first verify that a plain behavior-cloned VLA, trained solely on human teleoperated robot trajectories, can reliably execute long-horizon tasks. In the vacuum operation task, the robot first establishes a stable four‑finger grasp on a tabletop vacuum, powers it with a thumb press, increases power with a second thumb press, performs coverage sweeping to remove confetti, and then powers it off. Serving bread requires using tongs to retrieve a croissant from a pastry container while  maintaining grasping stability, simultaneous object stabilization, and precise, compliant manipulation. 
+We study long-horizon instruction following across three tasks of increasing difficulty, including bread serving, vacuum operation, and table decluttering. We verify that a plain behavior-cloned VLA, trained solely on human teleoperated robot trajectories, can reliably execute long-horizon tasks. 
 </div>
 
 <Figure>
@@ -155,7 +156,7 @@ We study long-horizon instruction following across three tasks of increasing dif
 </Figure>
 
 <div class="text-justify">
-**Results**: We summarizes success rates for plain-VLA and GR-Dexter under both Basic and OOD-Layout. In the Basic setting, plain-VLA achieves a success rate of 0.96, while GR-Dexter achieves 0.97, showing that co-training preserves the strong in-domain capability of the teleop-only baseline. In the more challenging OOD-Layout setting, plain-VLA drops to 0.64, whereas GR-Dexter improves substantially to 0.89. These results indicate that co-training with vision-language data significantly enhances generalization to unseen spatial layouts, while maintaining in-domain performance.
+**Results**: To improve generalization, we further train GR-Dexter with a co-training recipe that combines teleoperated robot trajectories with vision-language data. We summarizes success rates for plain-VLA and GR-Dexter under both Basic and OOD-Layout. In the Basic setting, plain-VLA achieves a success rate of 0.96, while GR-Dexter achieves 0.97, showing that co-training preserves the strong in-domain capability of the teleop-only baseline. In the more challenging OOD-Layout setting, plain-VLA drops to 0.64, whereas GR-Dexter improves substantially to 0.89. These results indicate that co-training with vision-language data significantly enhances generalization to unseen spatial layouts, while maintaining in-domain performance.
 </div>
 
 <Figure>
