@@ -115,7 +115,7 @@ We employ a co-training strategy for GR-Dexter using a mixture of three distinct
 
 <TwoColumns>
   <div class="text-justify" slot="left">
-  • Vision-language data: We reuse the VLM dataset from GR-3, which covers a wide spectrum of tasks including image captioning, visual question answering, image grounding, and grounded image captioning. 
+  • Vision-language data: We reuse the vision-language data from GR-3, which covers a spectrum of tasks including image captioning, visual question answering, image grounding, and grounded image captioning. 
   
   • Cross-embodiment data: We leverage existing open-source bi-manual humanoid datasets. Specifically, we select three dual-arm dexterous manipulation datasets that encompass diverse embodiments and task settings: Fourier ActionNet Dataset, OpenLoong Baihu Dataset, and RoboMIND. 
   
@@ -141,22 +141,16 @@ We employ a co-training strategy for GR-Dexter using a mixture of three distinct
 ## Experiments
 
 <div class="text-justify">
-We conduct extensive real-world experiments to comprehensively evaluate the performance of GR-Dexter on long-horizon bimanual manipulation and generalizable pick-and-place tasks. Our experiments evaluate GR-Dexter's capabilities in: (i) long-horizon task execution, (ii) generalization to out-of-distribution scenarios featuring novel relative spatial configurations, unseen objects, and unseen instructions, and (iii) learning from cross-embodiment data.
+We conduct extensive real-world experiments to evaluate the performance of GR-Dexter on long-horizon bimanual manipulation and generalizable pick-and-place tasks. We evaluate GR-Dexter in: (1) challenging dexterous tool use tasks, (2) long-horizon task execution, and (3) OOD scenarios with novel relative spatial configurations, unseen objects, and unseen instructions.
 </div>
 
 ### Long-Horizon Manipulation Tasks
-
 <div class="text-justify">
-We study long-horizon instruction following across three tasks of increasing difficulty, including bread serving, vacuum operation, and table decluttering. We verify that a plain behavior-cloned VLA, trained solely on human teleoperated robot trajectories, can reliably execute long-horizon tasks. 
+**Basic Settings**: the relative spatial configurations (layouts) of objects are present in the training data. Here, plain-VLA has a comparable performance with GR-Dexter, achieving 0.96 and 0.97 success rates correspondingly. This shows that co-training preserves the strong in-domain capability of the teleop-only baseline
 </div>
 
-<Figure>
-  <Image slot="figure" source={long_horizon} altText="long_horizon" class="w-full" />
-  <span slot="caption">GR-Dexter performs long-horizon tasks.</span>
-</Figure>
-
 <div class="text-justify">
-**Results**: To improve generalization, we further train GR-Dexter with a co-training recipe that combines teleoperated robot trajectories with vision-language data. We summarizes success rates for plain-VLA and GR-Dexter under both Basic and OOD-Layout. In the Basic setting, plain-VLA achieves a success rate of 0.96, while GR-Dexter achieves 0.97, showing that co-training preserves the strong in-domain capability of the teleop-only baseline. In the more challenging OOD-Layout setting, plain-VLA drops to 0.64, whereas GR-Dexter improves substantially to 0.89. These results indicate that co-training with vision-language data significantly enhances generalization to unseen spatial layouts, while maintaining in-domain performance.
+**Our-of-Distribution Settings**: the relative spatial configurations of objects are novel at test time. We evaluate on five unseen layouts while keeping the instruction order the same as Basic. In OOD settings, the performance of the plain-VLA drops to 0.64, whereas GR-Dexter improves substantially to 0.89. These results indicate that co-training with vision-language data significantly enhances generalization to unseen spatial layouts, while maintaining in-domain performance.
 </div>
 
 <Figure>
@@ -164,13 +158,27 @@ We study long-horizon instruction following across three tasks of increasing dif
   <span slot="caption">Experiment Settings and Results of Makeup Decluttering.</span>
 </Figure>
 
+<div class="text-justify">
+**Additional Qualitative Results**: we further consider two more complex long-horizon tasks: 1\) Vacuuming: the robot learns a stable four-finger grasp to hold the tabletop vacuum while using the thumb to press the power button (on/off). Next, it presses again to increase power, then sweeps to clear confetti. 2\) Bread serving: the robot learns to stably grasp food tongs to retrieve a croissant from a pastry container while the other hand holds a plate. It then releases the tongs and places the croissant onto the plate. We observe GR-Dexter performs both tasks reliably across time. 
+</div>
+
+<Figure>
+  <Image slot="figure" source={long_horizon} altText="long_horizon" class="w-full" />
+  <span slot="caption">GR-Dexter performs long-horizon tasks.</span>
+</Figure>
 
 </HighlightedSectionResult>
 <HighlightedSection>
 
 ### Generalizable Pick-and-Place
 <div class="text-justify">
-**Results**: On the in-domain Basic setting, all models achieve high success rates: plain VLA reaches 0.87, GR-Dexter (without cross-embodiment data) reaches 0.85, and GR-Dexter achieves the best performance at 0.93. Performance diverges substantially under OOD settings. On Unseen Objects, plain VLA drops to 0.45, while cotraining on vision-language data improves the success rate to 0.75 and GR-Dexter further increases success to 0.85, indicating stronger robustness to novel object instances. Similarly, under language variation in Unseen Instructions, plain VLA attains 0.53 whereas GR-Dexter achieves 0.83, demonstrating markedly improved reliability to unseen, abstract instructions. 
+</div>
+<div class="text-justify">
+**Basic Settings**: we observe that in the in-domain Basic setting, plain VLA reaches 0.87, GR-Dexter (w/o cross-embodiment data) reaches 0.85, and GR-Dexter achieves the best performance at 0.93. We find the results interesting because: 1\) GR-Dexter w/o cross-embodiment data performs slightly worse than plain VLA, as in the in-distribution setting, VL data gives no additional information but makes optimization more challenging; 2\) with cross-embodiment data, GR-Dexter significantly outperforms the two baselines, which suggests after careful data processing and alignment, larger scale cross-embodiment training for the action expert can improve the overall robustness and performance of GR-Dexter.
+</div>
+
+<div class="text-justify">
+**Unseen Objects and Instructions**: we observe that 1\) the performance of plain VLA drops significantly; 2\) VLM co-training largely improves the robustness and generalization of GR-Dexter, but empirically, GR-Dexter w/o cross-embodiment data still suffer from inaccurate grasping; 3\) with carefully filtered and aligned cross-embodiment co-training, GR-Dexter demonstrates strong generalization capabilities to both unseen objects and instructions, achieving a final success rate of 0.85 and 0.83 respectively.
 </div>
 
 <Figure>
@@ -179,7 +187,7 @@ We study long-horizon instruction following across three tasks of increasing dif
 </Figure>
 
 <div class="text-justify">
-These gains are consistent with the qualitative examples in following figures, where GR-Dexter successfully grasps unseen objects by leveraging skills learned from cross-embodiment data, and correctly interprets and executes previously unseen instructions. Overall, while all models perform well in-domain, GR-Dexter consistently yields the highest success rates and shows the strongest generalization under both unseen objects and unseen instructions.
+These gains are consistent with the qualitative examples in the following figure, where GR-Dexter successfully grasps unseen objects by leveraging skills learned from cross-embodiment data, and correctly interprets and executes previously unseen instructions. 
 </div>
 
 <Figure>
