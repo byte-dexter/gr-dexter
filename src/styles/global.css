@@ -56,6 +56,11 @@ ol {
 strong, b {
   @apply font-extrabold text-black dark:text-black;
 }
+pre, code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
 html {
   font-size: 110%;
 }
